@@ -1,0 +1,32 @@
+import os
+from apify_client import ApifyClient
+
+# Get your API token from an environment variable for security
+APIFY_TOKEN = os.getenv("APIFY_API_TOKEN")
+if not APIFY_TOKEN:
+    raise RuntimeError("Please set your APIFY_API_TOKEN environment variable.")
+
+client = ApifyClient(APIFY_TOKEN)
+
+# CORRECTED: Provide usernames as a list under the "usernames" key
+run_input = {"usernames": ["whodawnjuan", "gurule.andrue", "kekkodf"]}
+
+try:
+    run = client.actor("powerful_bachelor/github-user-profile-scraper").call(run_input=run_input)
+except Exception as e:
+    print(f"Actor run failed: {e}")
+    exit(1)
+
+dataset_id = run.get("defaultDatasetId")
+if not dataset_id:
+    print("No dataset produced by the actor run.")
+    exit(1)
+
+print(f"💾 Check your data here: https://console.apify.com/storage/datasets/{dataset_id}")
+
+items = list(client.dataset(dataset_id).iterate_items())
+if not items:
+    print("No items found in the dataset.")
+else:
+    for item in items:
+        print(item)
